@@ -1,0 +1,41 @@
+research_task:
+  agent: researcher
+  description: >
+    Research {topic}: gather structured CSV data and narrative Markdown summary satisfying {requirements}.
+    Use WebSearchTool for live data, FileReadTool for domain-specific docs,and for numeric insights. Use D‑ToT with reflexion.
+  expected_output: >
+    Comprehensive report (CSV + Markdown) with explicit ToT map, reflexion logs, and calculations supporting {requirements}.
+  async_execution: false
+  human_input: false
+  allow_delegation: true
+
+analysis_task:
+  agent: analyst
+  description: >
+    Analyze research outputs for {topic} under {requirements}. Build risk-aware architecture and performance spec.
+    Use DiagramTool to illustrate structure, RiskAssessmentTool to quantify issues, and FileReadTool for reference schemas. Include D‑ToT mapping.
+  expected_output: >
+    Technical architecture spec in Markdown with diagrams, risk matrix, ToT map, and reflexive rationale.
+  async_execution: false
+  human_input: false
+
+coding_task:
+  agent: coding_agent
+  description: >
+    Implement desktop/web {topic} app satisfying {requirements}, using Python/JS/React/Express/Django/CSS.
+    Use CodeFormatterTool to enforce style, SecurityAuditTool to check vulnerabilities, and FileReadTool to import configs.
+    Log ToT alternatives and reflexively audit before finalizing code.
+  expected_output: >
+    Codebase + documentation with ToT decision map, reflexion audit, achieving {requirements}.
+  async_execution: false
+  human_input: false
+
+overlord_task:
+  agent: overlord
+  description: >
+    Validate outputs for {topic} against {requirements}. Aggregate ToT/reflexion logs, run TestRunnerTool, log QA results.
+  expected_output: >
+    Full orchestration log with QA metrics, ToT/reflexion summaries, observability outputs, and compliance with {requirements}.
+  async_execution: true
+  human_input: false
+  allow_delegation: true
