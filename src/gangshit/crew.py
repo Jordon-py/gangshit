@@ -23,57 +23,27 @@ class Gangshit():
     agents_config_path = 'config/agents.yaml'
     tasks_config_path = 'config/tasks.yaml'
 
-    # LLM Configuration with Ollama primary, fallbacks
-    def _get_llm(self):
-        """Get the best available LLM configuration"""
+    # LLM Configuration - Ollama Llama3.2 only
+    def llm_config(self):
+        """Get Ollama Llama3.2 LLM configuration
+        # Load the LLM model name from environment variable or use default"""
         
-        # Primary: Ollama Deepseek R1
-        deepseek_model = os.getenv("OLLAMA_DEEPSEEK", "deepseek-r1:8b")
-        if deepseek_model:
-            try:
-                print(f"🔧 Using Ollama Deepseek: {deepseek_model}")
-                return LLM(
-                    model=f"ollama/{deepseek_model.replace('ollama/', '')}",
-                    base_url="http://localhost:11434",
-                    stream=False,  # Disable streaming for stability
-                )
-            except Exception as e:
-                print(f"⚠️  Ollama Deepseek failed: {e}")
-        
-        # Fallback 1: OpenRouter
-        openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("API_KEY")
-        if openrouter_key:
-            print("🔧 Falling back to OpenRouter...")
-            return LLM(
-                model="openrouter/qwen/qwen-2.5-7b-instruct:free",
-                base_url="https://openrouter.ai/api/v1",
-                api_key=openrouter_key,
-                stream=False,
-            )
-        
-        # Fallback 2: Groq
-        groq_key = os.getenv("GROQ_API_KEY")
-        if groq_key:
-            print("🔧 Falling back to Groq...")
-            return LLM(
-                model="groq/llama-3.1-8b-instant",
-                base_url="https://api.groq.com/openai/v1",
-                api_key=groq_key,
-                stream=False,
-            )
-        
-        # Last resort - try Ollama without API key
-        print("⚠️  Warning: Using basic Ollama configuration")
+        llama_model = os.getenv("OLLAMA_LLAMA3", "llama3.2")
+        gemma3_model = os.getenv("OLLAMA_GEMMA3", "gemma3:latest")
+        deepseek_model = os.getenv("OLLAMA_DEEPSEEK", "deepseek:latest")
+        print(f"🔧 Using Ollama Llama3.2: {llama_model}")
+        print(f"🔧 Using Ollama Gemma3: {gemma3_model}")
+
         return LLM(
-            model="ollama/deepseek-r1:8b",
+            model=f"ollama/{llama_model}",
             base_url="http://localhost:11434",
-            stream=False,
+            stream=True,  # Enable streaming for real-time updates
         )
 
     @property
     def llm(self):
         if not hasattr(self, '_llm'):
-            self._llm = self._get_llm()
+            self._llm = self.llm_config()
         return self._llm
 
     @before_kickoff

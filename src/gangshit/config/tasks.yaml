@@ -1,41 +1,85 @@
 research_task:
   agent: researcher
   description: >
-    Research {topic}: gather structured CSV data and narrative Markdown summary satisfying {requirements}.
-    Use WebSearchTool for live data, FileReadTool for domain-specific docs,and for numeric insights. Use D‑ToT with reflexion.
+    Research {topic} by gathering up-to-date, structured CSV data and a detailed Markdown narrative summary fulfilling {requirements}.
+    Employ WebSearchTool for live web data, FileReadTool for trusted domain docs, and integrate numeric/graphical data as needed.
+    Apply Dynamic Tree of Thought (D-ToT) with explicit branch mapping, cross-source validation, and reflexion at each major step.
+    Flag data gaps, inconsistencies, or ambiguities for analyst review.
+    Maintain a detailed context memory for follow-up research cycles.
   expected_output: >
-    Comprehensive report (CSV + Markdown) with explicit ToT map, reflexion logs, and calculations supporting {requirements}.
+    Comprehensive research deliverable: 
+      - Structured CSV dataset (with data provenance/links),
+      - Markdown summary with insights and key findings,
+      - Explicit ToT branch map,
+      - Reflexion and self-critique log,
+      - Calculations and charts addressing {requirements}.
   async_execution: false
   human_input: false
   allow_delegation: true
+  enable_context_memory: true
+  escalate_to: analyst
 
 analysis_task:
   agent: analyst
   description: >
-    Analyze research outputs for {topic} under {requirements}. Build risk-aware architecture and performance spec.
-    Use DiagramTool to illustrate structure, RiskAssessmentTool to quantify issues, and FileReadTool for reference schemas. Include D‑ToT mapping.
+    Analyze research outputs on {topic} for completeness, quality, and risk relative to {requirements}.
+    Construct risk-aware system architecture and performance specs.
+    Use DiagramTool for architecture visuals, RiskAssessmentTool for quantified issues, and FileReadTool for schema reference.
+    Incorporate explicit D-ToT mapping of design choices and alternatives, and reflexive rationale at each fork.
+    Provide feedback to researcher on any input gaps or ambiguities.
+    Enable collaborative review with coding_agent for implementation feasibility.
   expected_output: >
-    Technical architecture spec in Markdown with diagrams, risk matrix, ToT map, and reflexive rationale.
+    Technical architecture specification in Markdown:
+      - System/component diagrams,
+      - Risk matrix (quantitative/qualitative),
+      - D-ToT branch map,
+      - Reflexion/decision rationale,
+      - Review feedback summary.
   async_execution: false
   human_input: false
+  allow_delegation: true
+  enable_context_memory: true
+  accept_feedback_from: [researcher, coding_agent]
+  escalate_to: overlord
 
 coding_task:
   agent: coding_agent
   description: >
-    Implement desktop/web {topic} app satisfying {requirements}, using Python/JS/React/Express/Django/CSS.
-    Use CodeFormatterTool to enforce style, SecurityAuditTool to check vulnerabilities, and FileReadTool to import configs.
-    Log ToT alternatives and reflexively audit before finalizing code.
+    Implement a robust desktop/web {topic} app fulfilling {requirements} using Python, JS, React, Express, Django, CSS, or other best-fit stack.
+    Use CodeFormatterTool for auto-formatting, SecurityAuditTool for vulnerability checks, FileReadTool for configs, and VersionControlTool for repo management.
+    Log Tree of Thought (ToT) design alternatives and reflexively audit major decisions before finalizing the codebase.
+    Support continuous integration and automated unit/QA testing.
+    Collaborate with analyst on architecture clarifications and optimizations.
   expected_output: >
-    Codebase + documentation with ToT decision map, reflexion audit, achieving {requirements}.
+    Production-ready codebase with:
+      - Inline and summary documentation,
+      - Modularized code structure,
+      - 
+      - Automated test results,
+      - Compliance report for {requirements}.
   async_execution: false
   human_input: false
+  allow_delegation: true
+  enable_context_memory: true
+  escalate_to: analyst
 
 overlord_task:
   agent: overlord
   description: >
-    Validate outputs for {topic} against {requirements}. Aggregate ToT/reflexion logs, run TestRunnerTool, log QA results.
+    Orchestrate and validate all outputs for {topic} against {requirements}.
+    Aggregate ToT/reflexion logs, run TestRunnerTool for end-to-end/QA/coverage testing, and synthesize observability outputs.
+    Monitor for unresolved or escalated issues and initiate workflow self-healing or human escalation if needed.
+    Produce a final compliance report and knowledge base update for future projects.
   expected_output: >
-    Full orchestration log with QA metrics, ToT/reflexion summaries, observability outputs, and compliance with {requirements}.
+    Orchestration & QA deliverable including:
+      - Aggregated ToT/reflexion/QA logs,
+      - QA metrics and test results,
+      - Observability dashboard (status, errors, coverage),
+      - Full compliance report,
+      - Lessons learned and workflow update.
   async_execution: true
   human_input: false
   allow_delegation: true
+  enable_context_memory: true
+  workflow_self_healing: true
+  escalate_to: human
