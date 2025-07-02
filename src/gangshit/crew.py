@@ -1,141 +1,255 @@
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
+# =====================================================================
+# Enhanced CrewAI Crew Class (2024+ Best Practices)
+# =====================================================================
 
-from crewai import Agent, Crew, Process, Task, LLM
-from crewai.project import CrewBase, agent, crew, task, before_kickoff, after_kickoff
+from crewai import Agent, Crew, Task, Process
+from crewai.project import CrewBase, agent, task, crew, before_kickoff, after_kickoff
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from gangshit.tools import MyCustomListener
 from typing import List
+
 import os
+import sys
 from dotenv import load_dotenv
+from crewai_tools import SerperDevTool
 
-load_dotenv(override=True)  # Load environment variables from .env file
+# Load environment variables from .env
+load_dotenv(override=True)
 
-# Comment out the listener setup for now
-# my_listener = MyCustomListener()
-# my_listener.setup_listeners(crewai_event_bus)
+# =========================
+# 1. ENVIRONMENT LOADING & PATHS
+# =========================
+print("[CrewAI] Loading environment variables...")
+load_dotenv(override=True)
 
+# Validate required environment variables for Ollama
+def assert_env_var(var, example):
+    if os.getenv(var) is None:
+        print(f"[ERROR] Required environment variable '{var}' not set! Example: {example}")
+        sys.exit(1)
+
+required_env = {
+    "OLLAMA_BASE_URL": "http://localhost:11434",
+    "OLLAMA_LLAMA3": "llama3.2:latest",
+    "OLLAMA_DEEPSEEK": "deepseek-r1:1.5b-qwen-distill-q8_0",
+    "OLLAMA_GEMMA3": "gemma3:latest",
+    # Add any others (SERPER_API_KEY, etc) as needed
+}
+for k, v in required_env.items():
+    assert_env_var(k, v)
+
+# Project file locations (relative to this file)
+AGENTS_YAML = "config/agents.yaml"
+TASKS_YAML = "config/tasks.yaml"
+
+def full_path(rel_path):
+    base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base, rel_path)
+
+if not os.path.exists(full_path(AGENTS_YAML)):
+    print(f"[ERROR] Agents YAML not found at {AGENTS_YAML}")
+    sys.exit(1)
+if not os.path.exists(full_path(TASKS_YAML)):
+    print(f"[ERROR] Tasks YAML not found at {TASKS_YAML}")
+    sys.exit(1)
+
+# =========================
+# 2. CREWAI BASE CREW DEFINITION
+# =========================
 @CrewBase
-class Gangshit():
-    """Gangshit crew for web application development"""
+class Gangshit:
+    """
+    CrewAI 2024+ Enhanced Orchestration Class.
+    Loads agents & tasks from YAML, assigns LLMs/tools, enables verbose logging, and adds robust error handling.
+    """
 
-    agents_config_path = 'config/agents.yaml'
-    tasks_config_path = 'config/tasks.yaml'
+    # Specify YAML config files (CrewAI auto-loads by key)
+    agents_config = AGENTS_YAML
+    tasks_config = TASKS_YAML
 
-    # LLM Configuration - Ollama Llama3.2 only
-    def llm_config(self):
-        """Get Ollama Llama3.2 LLM configuration
-        # Load the LLM model name from environment variable or use default"""
-        
-        llama_model = os.getenv("OLLAMA_LLAMA3", "llama3.2")
-        gemma3_model = os.getenv("OLLAMA_GEMMA3", "gemma3:latest")
-        deepseek_model = os.getenv("OLLAMA_DEEPSEEK", "deepseek:latest")
-        print(f"🔧 Using Ollama Llama3.2: {llama_model}")
-        print(f"🔧 Using Ollama Gemma3: {gemma3_model}")
+    # =========================
+    # 3. LLM MODEL CONFIGURATION
+    # =========================
+    @staticmethod
+    def llm_models():
+        """
+        Loads LLM model names from environment variables, defaults provided.
+        Returns: (LLAMA3, DEEPSEEK, GEMMA3)
+        """
+        # Print which models are being used
+        LLAMA3 = os.getenv("OLLAMA_LLAMA3", "llama3.2:latest")
+        DEEPSEEK = os.getenv("OLLAMA_DEEPSEEK", "deepseek-r1:1.5b-qwen-distill-q8_0")
+        GEMMA3 = os.getenv("OLLAMA_GEMMA3", "gemma3:latest")
+        print(f"[CrewAI] Using LLMs:")
+        print(f"  LLAMA3:   {LLAMA3}")
+        print(f"  DEEPSEEK: {DEEPSEEK}")
+        print(f"  GEMMA3:   {GEMMA3}")
+        return LLAMA3, DEEPSEEK, GEMMA3
 
-        return LLM(
-            model=f"ollama/{llama_model}",
-            base_url="http://localhost:11434",
-            stream=True,  # Enable streaming for real-time updates
-        )
+    # Set class attributes (static)
+    OLLAMA_LLAMA3, OLLAMA_DEEPSEEK, OLLAMA_GEMMA3 = llm_models.__func__()
 
-    @property
-    def llm(self):
-        if not hasattr(self, '_llm'):
-            self._llm = self.llm_config()
-        return self._llm
-
-    @before_kickoff
-    def before_kickoff(self, inputs):
-        print("🚀 Crew is about to start!")
-        print(f"📝 Topic: {inputs.get('topic', 'Not specified')}")
-
-    @after_kickoff
-    def after_kickoff(self, output):
-        print("✅ Crew has completed execution!")
-        print(f"📊 Generated {len(str(output))} characters of analysis")
-
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
-    
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
-    
+    # =========================
+    # 4. AGENT FACTORIES
+    # =========================
     @agent
     def researcher(self) -> Agent:
-        return Agent(
-            config=self.agents_config['researcher'],
-            verbose=True,
-            llm=self.llm,
-        )
+        """
+        Research specialist, uses GEMMA3 and web search tool.
+        Config injected from YAML by CrewAI.
+        """
+        print("[CrewAI] Instantiating researcher agent...")
+        try:
+            return Agent(
+                config=self.agents_config['researcher'],
+                llm=self.OLLAMA_GEMMA3,
+                verbose=True,
+                tools=[SerperDevTool()]  # Add more tools if needed
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize 'researcher' agent: {e}")
+            raise
 
     @agent
     def analyst(self) -> Agent:
-        return Agent(
-            config=self.agents_config['analyst'],
-            verbose=True,
-            llm=self.llm,
-        )
-        
+        """
+        Technical analyst, uses GEMMA3 and web search tool.
+        """
+        print("[CrewAI] Instantiating analyst agent...")
+        try:
+            return Agent(
+                config=self.agents_config['analyst'],
+                llm=self.OLLAMA_GEMMA3,
+                verbose=True,
+                tools=[SerperDevTool()]
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize 'analyst' agent: {e}")
+            raise
+
     @agent
     def coding_agent(self) -> Agent:
-        return Agent(
-            config=self.agents_config['coding_agent'],
-            verbose=True,
-            llm=self.llm,
-        )
-        
+        """
+        ML/Full-stack coding agent, uses DEEPSEEK model.
+        """
+        print("[CrewAI] Instantiating coding_agent agent...")
+        try:
+            return Agent(
+                config=self.agents_config['coding_agent'],
+                llm=self.OLLAMA_DEEPSEEK,
+                verbose=True
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize 'coding_agent' agent: {e}")
+            raise
+
     @agent
     def overlord(self) -> Agent:
-        return Agent(
-            config=self.agents_config['overlord'],
-            verbose=True,
-            llm=self.llm,
-        )
+        """
+        Orchestrator/QA agent, uses LLAMA3.
+        """
+        print("[CrewAI] Instantiating overlord agent...")
+        try:
+            return Agent(
+                config=self.agents_config['overlord'],
+                llm=self.OLLAMA_LLAMA3,
+                verbose=True
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to initialize 'overlord' agent: {e}")
+            raise
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
+    # =========================
+    # 5. TASK FACTORIES
+    # =========================
     @task
-    def researcher_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['research_task'],
-            output_file='research_report.md',
-        )
+    def research_task(self) -> Task:
+        """
+        Task: Research with data curation and CSV/Markdown output.
+        """
+        print("[CrewAI] Configuring research_task...")
+        try:
+            return Task(
+                config=self.tasks_config['research_task'],
+                output_file='results/research_report.md'
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to configure 'research_task': {e}")
+            raise
 
     @task
     def analyst_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['analysis_task'],
-            output_file='analyst_report.md'
-        )
-        
+        """
+        Task: Analyze research output, create architecture spec.
+        """
+        print("[CrewAI] Configuring analyst_task...")
+        try:
+            return Task(
+                config=self.tasks_config['analyst_task'],
+                output_file='results/analyst_report.md'
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to configure 'analyst_task': {e}")
+            raise
+
     @task
     def coding_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['coding_task'],
-            output_file='coding_report.md'
-        )
-        
+        """
+        Task: Build app/codebase for topic, ensure compliance.
+        """
+        print("[CrewAI] Configuring coding_task...")
+        try:
+            return Task(
+                config=self.tasks_config['coding_task'],
+                output_file='results/coding_report.md'
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to configure 'coding_task': {e}")
+            raise
+
     @task
     def overlord_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['overlord_task'],
-            output_file='overlord_report.md'
-        )
+        """
+        Task: Final orchestration, QA, compliance reporting.
+        """
+        print("[CrewAI] Configuring overlord_task...")
+        try:
+            return Task(
+                config=self.tasks_config['overlord_task'],
+                output_file='results/overlord_report.md'
+            )
+        except Exception as e:
+            print(f"[ERROR] Failed to configure 'overlord_task': {e}")
+            raise
 
+    # =========================
+    # 6. CREW ASSEMBLY
+    # =========================
     @crew
     def gangshit_crew(self) -> Crew:
-        """Creates the Gangshit crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
+        """
+        Assemble all agents and tasks into a hierarchical crew.
+        Includes manager LLM and live tools.
+        """
+        print("[CrewAI] Assembling crew (hierarchical process)...")
+        try:
+            # Make sure results folder exists
+            results_path = full_path("../../results")
+            os.makedirs(results_path, exist_ok=True)
 
-        return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
-            process=Process.sequential,
-            verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
-        )
+            assembled_crew = Crew(
+                agents=self.agents,         # Injected agent instances
+                tasks=self.tasks,           # Injected task instances
+                process=Process.hierarchical,    # Multi-agent delegation
+                manager_llm=self.OLLAMA_LLAMA3,  # Main LLM for orchestration
+                verbose=True,
+                base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+                tools=[SerperDevTool()],    # Global tools (add more as needed)
+            )
+            print("[CrewAI] Crew assembled successfully!")
+            return assembled_crew
+        except Exception as e:
+            print(f"[ERROR] Failed to assemble crew: {e}")
+            raise
+
+# END OF FILE
+# =========================

@@ -1,0 +1,67 @@
+# Coding Agent Expert Knowledge Base
+
+## Mission
+Build robust, scalable, and maintainable apps—**always using React.jsx for all front-ends** and selecting the best-fit backend (Django or Express). All UI must use **custom CSS (no frameworks or utility-first CSS)**.
+
+---
+
+### I. Project Architecture
+
+- **Front-End:**  
+  - Always React.jsx (latest version).
+  - Structure: Modular, atomic component hierarchy (e.g., components, containers, hooks).
+  - State: Use hooks, Context API, or Redux as needed.
+  - UI/UX: All styles written as modular, maintainable custom CSS.  
+    - always use lch color space for colors.
+    - Use CSS variables for theming.
+    - Avoid frameworks like Tailwind, Bootstrap, Material UI, etc.
+
+- **Back-End:**  
+  - Use Django for data-heavy, rapid-prototyping, admin-required, or Python-integrated projects.
+  - Use Express for real-time, API-centric, or JavaScript-native projects.
+  - Document backend choice rationale for each project.
+  - Standardize RESTful or GraphQL API schemas; version all endpoints.
+
+---
+
+### II. Multi-Platform Development
+
+- **Web Apps:**  
+  - SPA/SSR with React Router, custom CSS.
+  - Progressive Web App support where feasible.
+
+- **Desktop Apps:**  
+  - Use Electron (with React) or PyQt as needed.
+  - Maintain consistent style/theme using the same custom CSS logic.
+
+- **Mobile Apps:**  
+  - React Native, sharing logic/components where possible.
+  - Isolate native-specific logic.
+
+---
+
+### III. Expert Dev Practices
+
+- **Testing:**  
+  - High coverage: Jest, React Testing Library (frontend); Pytest/Unittest (Django); Jest/Supertest (Express).
+- **Automation:**  
+  - Set up CI/CD with linting, build, and test gates.
+- **Documentation:**  
+  - JSDoc/PyDoc for all public APIs and core modules.
+- **Refactoring:**  
+  - Schedule and log regular refactor sprints.
+
+---
+
+### IV. Self-Optimization Protocol
+
+- **After Each Release:**  
+  - Review all code for clarity, performance, and style adherence.
+  - Update this file with new techniques or “gotchas” discovered.
+
+- **Feedback Loop:**  
+  - If a project needs a new stack/tool, log rationale and inform Overlord to trigger an update.
+
+---
+
+**Last Updated:** [DATE]

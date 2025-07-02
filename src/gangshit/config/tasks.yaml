@@ -1,85 +1,87 @@
 research_task:
   agent: researcher
-  description: >
+  description: |
     Research {topic} by gathering up-to-date, structured CSV data and a detailed Markdown narrative summary fulfilling {requirements}.
     Employ WebSearchTool for live web data, FileReadTool for trusted domain docs, and integrate numeric/graphical data as needed.
-    Apply Dynamic Tree of Thought (D-ToT) with explicit branch mapping, cross-source validation, and reflexion at each major step.
-    Flag data gaps, inconsistencies, or ambiguities for analyst review.
-    Maintain a detailed context memory for follow-up research cycles.
-  expected_output: >
-    Comprehensive research deliverable: 
-      - Structured CSV dataset (with data provenance/links),
-      - Markdown summary with insights and key findings,
-      - Explicit ToT branch map,
-      - Reflexion and self-critique log,
-      - Calculations and charts addressing {requirements}.
-  async_execution: false
-  human_input: false
+    Apply D-ToT with explicit branch mapping, cross-source validation, and reflexion at each step.
+    Flag data gaps for analyst review.
+    Maintain a detailed context memory for follow-up cycles.
+  expected_output: |
+    Comprehensive research deliverable:
+      - Structured CSV dataset (with data provenance/links)
+        - Expected CSV schema: "source,title,date,value,provenance_url"
+        - Example:
+            source,title,date,value,provenance_url
+            ExampleSite,Example Data,2024-06-01,123,https://examplesite.com/data
+      - Markdown summary with insights/key findings
+      - Explicit ToT branch map
+      - Reflexion and self-critique log
+      - Calculations/charts for {topic} {requirements}
   allow_delegation: true
-  enable_context_memory: true
-  escalate_to: analyst
+  accept_feedback_from:
+    - analyst
+    - coding_agent
+    - overlord
 
-analysis_task:
+analyst_task:
   agent: analyst
-  description: >
+  description: |
     Analyze research outputs on {topic} for completeness, quality, and risk relative to {requirements}.
     Construct risk-aware system architecture and performance specs.
-    Use DiagramTool for architecture visuals, RiskAssessmentTool for quantified issues, and FileReadTool for schema reference.
-    Incorporate explicit D-ToT mapping of design choices and alternatives, and reflexive rationale at each fork.
-    Provide feedback to researcher on any input gaps or ambiguities.
-    Enable collaborative review with coding_agent for implementation feasibility.
-  expected_output: >
+    Provide feedback to researcher; enable collaborative review with coding_agent.
+    Overlord may assign additional tasks.
+  expected_output: |
     Technical architecture specification in Markdown:
-      - System/component diagrams,
-      - Risk matrix (quantitative/qualitative),
-      - D-ToT branch map,
-      - Reflexion/decision rationale,
-      - Review feedback summary.
-  async_execution: false
-  human_input: false
+      - System/component diagrams
+      - Risk matrix (quantitative/qualitative)
+      - D-ToT branch map
+      - Review feedback summary
   allow_delegation: true
-  enable_context_memory: true
-  accept_feedback_from: [researcher, coding_agent]
-  escalate_to: overlord
+  accept_feedback_from:
+    - researcher
+    - coding_agent
+    - overlord
+
 
 coding_task:
   agent: coding_agent
-  description: >
-    Implement a robust desktop/web {topic} app fulfilling {requirements} using Python, JS, React, Express, Django, CSS, or other best-fit stack.
-    Use CodeFormatterTool for auto-formatting, SecurityAuditTool for vulnerability checks, FileReadTool for configs, and VersionControlTool for repo management.
-    Log Tree of Thought (ToT) design alternatives and reflexively audit major decisions before finalizing the codebase.
-    Support continuous integration and automated unit/QA testing.
-    Collaborate with analyst on architecture clarifications and optimizations.
-  expected_output: >
+  description: |
+    Implement a robust desktop/web app regarding {topic} fulfilling {requirements} using a clearly defined backend stack (choose from Express.js, Django, or Python FastAPI) and a React.jsx frontend.
+    Reflexively audit major decisions before finalizing the codebase.
+    Support CI and automated QA/unit testing.
+    Collaborate with analyst on clarifications/optimizations.
+  expected_output: |
     Production-ready codebase with:
-      - Inline and summary documentation,
-      - Modularized code structure,
-      - 
-      - Automated test results,
-      - Compliance report for {requirements}.
-  async_execution: false
-  human_input: false
+      - Inline/summary documentation
+      - Modularized code structure
+      - React.jsx frontend
+      - Compliance report for {requirements}
   allow_delegation: true
-  enable_context_memory: true
-  escalate_to: analyst
+  accept_feedback_from:
+    - analyst
+    - researcher
+    - overlord
 
 overlord_task:
   agent: overlord
-  description: >
+  description: |
     Orchestrate and validate all outputs for {topic} against {requirements}.
-    Aggregate ToT/reflexion logs, run TestRunnerTool for end-to-end/QA/coverage testing, and synthesize observability outputs.
-    Monitor for unresolved or escalated issues and initiate workflow self-healing or human escalation if needed.
-    Produce a final compliance report and knowledge base update for future projects.
-  expected_output: >
+    Aggregate ToT/reflexion logs, run TestRunnerTool for QA/coverage, synthesize observability outputs.
+    Monitor for unresolved/escalated issues and initiate workflow self-healing or human escalation if needed.
+    Produce final compliance report and knowledge base update.
+    Assign additional tasks as necessary.
+  expected_output: |
     Orchestration & QA deliverable including:
-      - Aggregated ToT/reflexion/QA logs,
-      - QA metrics and test results,
-      - Observability dashboard (status, errors, coverage),
-      - Full compliance report,
-      - Lessons learned and workflow update.
+      - Aggregated ToT/reflexion/QA logs
+      - QA metrics and test results
+      - Observability dashboard (status, errors, coverage)
+      - Full compliance report
+      - Lessons learned and workflow update
   async_execution: true
-  human_input: false
   allow_delegation: true
-  enable_context_memory: true
-  workflow_self_healing: true
-  escalate_to: human
+  accept_feedback_from:
+    - researcher
+    - analyst
+    - coding_agent
+    - overlord
+

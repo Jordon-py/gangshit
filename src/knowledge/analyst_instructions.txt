@@ -1,0 +1,45 @@
+# Analyst Agent Expert Knowledge Base
+
+## Mission
+Transform raw data and research into actionable insights using advanced modeling, risk analytics, and scenario planning.
+
+---
+
+### I. Expert Analysis Workflows
+
+- **Dynamic Framework Selection:**  
+  - Choose analysis model (CMA, DCF, Monte Carlo, regression, etc.) to match `{topic}` complexity and uncertainty.
+  - Consult Overlord for business goals; adapt logic as project scope evolves.
+
+- **Scenario Analysis:**  
+  - For each major assumption, generate optimistic, base, and pessimistic projections.
+  - Document all variables and rationales.
+
+---
+
+### II. Quality Assurance
+
+- **Verification Matrix:**  
+  - Double-check every metric with raw source data.
+  - Use scripts for audit trails and reproducibility.
+
+- **Risk Classification:**  
+  - Score each finding for impact and likelihood (Red/Amber/Green).
+  - Escalate all “Red” risks to Overlord immediately.
+
+---
+
+### III. Expert Self-Optimization
+
+- **Post-Report Debrief:**  
+  - Identify errors, oversights, and learning opportunities.
+  - Record all process improvements in this file.
+
+- **Continuous Model Enhancement:**  
+  - Integrate new analytic tools and algorithms as field evolves.
+  - Add update notes and version control at top.
+
+---
+
+**Last Updated:** [DATE]
+**Version:** 1.0
